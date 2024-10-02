@@ -1,274 +1,213 @@
-        const buttons = Array.from(document.querySelectorAll("button"));
-        const result = document.getElementById("input");
+const lightThemeRadio = document.getElementById('light');
+const darkThemeRadio = document.getElementById('dark');
 
-        let newCalculation = false;
-        let numbers = '' ;
-        const operator = ["+", "-", "/", "*"];
+function changetheme(theme) {
+    document.body.classList.remove('light-theme', 'dark-theme');
+    document.body.classList.add(theme);
+    localStorage.setItem('theme', theme);
+};
 
-        let inputResult = result.value;
+lightThemeRadio.addEventListener('change', () => {
+    if(lightThemeRadio.checked) {
+        changetheme('light-theme')
+    }
+});
 
-
-
-        buttons.forEach((btn) => {
-            btn.addEventListener('click', () =>
-            {
-        const buttonValue = btn.textContent;
-
-
-         if(btn.value === "c") { 
-           cleanInput();
-          
-            }
-           
-            
-            else if(btn.value === "=") {
-            //  calculate the result  
-                 equalInput();
-
-               
-            }
-
-             else if(btn.value === ".") {
-
-             const currentInputValue = numbers.split(/[\+\-\*\/]/);
-           
-                
-            const lastNum = currentInputValue[currentInputValue.length -1];
+darkThemeRadio.addEventListener('change', () => {
+    if(darkThemeRadio.checked) {
+        changetheme('dark-theme');
+    }
+})
+ 
+const savedTheme = localStorage.getItem('theme');
+if (savedTheme) {
+    changetheme(savedTheme);
+    if (savedTheme === 'light-theme') {
+        lightThemeRadio.checked = true;
+    } else if (savedTheme === 'dark-theme') {
+        darkThemeRadio.checked = true;
+    }
+} else {
+    // If no theme is saved, default to the light theme
+    changetheme('light-theme');
+    lightThemeRadio.checked = true;
+}
 
  
+ 
+ 
+ const buttons = Array.from(document.querySelectorAll("button"));
+ const result = document.getElementById("input");
 
-            // prevent pressing dot "." twice before any operator
-            if (!lastNum.includes(".")) {
-                numbers += ".";
-                result.value += ".";
-            }
-           
-             
-                }
-            
-            //   operators
+ let newCalculation = false;
+ let currentInput = '' ;
+ const operators = ["+", "-", "/", "*"];
 
-            else if (operator.includes(buttonValue)) {
-            
-                // continue calculation with the result
-
-                if(newCalculation) {
-                    newCalculation = false;
-                    numbers += buttonValue;
-                    result.value += buttonValue;
-                }
-
-                // prevent pressing the same operator twice
-                const disableOpe = numbers.slice(-1);
-
-                if (!operator.includes(disableOpe)) {
-                    numbers += buttonValue;
-                    result.value += buttonValue;
-                    console.log(numbers)
-                }
-
-               
-            }
+ let inputResult = result.value;
 
 
 
-        
+ buttons.forEach((btn) => {
+    btn.addEventListener('click', () => buttonClick(btn));
+ });
+ const buttonClick = (button) => {
+        const buttonValue = button.textContent;
 
-        else {
-        
-           if(newCalculation) {
-       numbers = "";
-            result.value = "";
-            newCalculation = false;
-           }
-        
-       
-        numbers +=  buttonValue;
-
-            result.value = numbers;
-        
-        }
-    })
-})
-
-
-        
-    
-
-
-
-
-
-
-        function cleanInput() {
-            newCalculation = false;
-        result.value = '';
-        
-        numbers = '';
-        
-        
-        
-        }
-       
-
-
-        function calculateTwoNum(num1, num2, operator) {
-            switch(operator){
-            case("+"):
-            return num1 + num2;
-        
-            case("-"):
-            return num1 - num2;
-        
-        
-            case("*"):
-        
-            return num1 * num2;
-        
-           case("/"):
-           if(num2 === 0) return "Error";
-           return num1 / num2;
-            
-           default: 
-           return 0;
-        
-            }
-        }
-        
-        
-        
-        
-        function calculateResult(result) {
-            const operatorsStack = [];  // Renamed to avoid conflict
-            const secondNumber = [];
-            let firstNumber = "";
-        
-            for (let i = 0; i < result.length; i++) {
-                const split = result[i];
-        
-                if (!isNaN(split) || split === ".") {  // Include dot as part of number
-                    firstNumber += split;
-                } else if (operator.includes(split)) {
-                    if (firstNumber !== "") {
-                        secondNumber.push(parseFloat(firstNumber));
-                        firstNumber = "";
-                    }
-                    
-                    while (operatorsStack.length > 0 && arrangeOperators(operatorsStack[operatorsStack.length - 1]) >= arrangeOperators(split)) {
-                        const first = secondNumber.pop();
-                        const second = secondNumber.pop();
-                        const ope = operatorsStack.pop();
-                        secondNumber.push(calculateTwoNum(second, first, ope));
-                    }
-                    operatorsStack.push(split);
-                }
-            }
-        
-            if (firstNumber !== "") {
-                secondNumber.push(parseFloat(firstNumber));
-            }
-        
-            while (operatorsStack.length > 0) {
-                const first = secondNumber.pop();
-                const second = secondNumber.pop();
-                const ope = operatorsStack.pop();
-                secondNumber.push(calculateTwoNum(second, first, ope));
-            }
-        
-            return secondNumber.pop();
-        }
-        
-
-        function arrangeOperators (operator) {
-            if(operator === "+" || operator === "-") {
-                return 1;
-            }
-            else if(operator === "*" || operator === "/") {
-                return 2;
-            }
-
-                else {
-                    return 0;
-                }
-            }
-        
-        
-        
-        
-        
-        
-        
-
-
-
-
-
+        switch (button.value) {
+            case "c":
+                cleanInput();
+                break;
+            case "=": 
+            processResult();
+            break;
+           case '.':
+            handleDecimal();
+            break;
+          default:
+            operatorsOrNumbers(buttonValue);
    
+        }
+    };
 
-function equalInput() {
 
+ // Clean the display and currentInput variable
+ function cleanInput() {
+    newCalculation = false;
+    currentInput = "";
+    result.value = '';     
+
+ };
+
+//  Calculate result and display it
+function processResult() {
     try {
-        const finalResult = calculateResult(numbers);
-
-    if(finalResult === "Error" || isNaN(finalResult)){
+        const finalResult = calculateResult(currentInput);
+        if (finalResult === "Error" || isNaN(finalResult)) {
+            result.value = "Error";
+        } else {
+            result.value = finalResult;
+        }
+        currentInput = result.value;
+        newCalculation = true;
+    } catch (e) {
         result.value = "Error";
     }
-    else{result.value= finalResult;
+}
+
+//  decimal button
+function handleDecimal() {
+
+    const currentInputValue = currentInput.split(/[\+\-\*\/]/);
+    const lastNum = currentInputValue[currentInputValue.length -1];
+    
+    // prevent pressing dot "." twice before any operato
+    if (!lastNum.includes(".")) {
+       currentInput += ".";
+     result.value += ".";
+ }
+
+};
+
+// operators and numbers
+function operatorsOrNumbers(value) {
+    if (operators.includes(value)) {
+        operatorClick(value);
+    } else {
+        numberClick(value);
+    }
+}
+
+// operators
+function operatorClick(operator) {
+    if (newCalculation) {
+        newCalculation = false;
+        result.value += operator;
+        currentInput += operator;
+    } else {
+        const lastChar = currentInput.slice(-1);
+        if (!operators.includes(lastChar)) {
+            result.value += operator;
+            currentInput += operator;
+        }
+    }
+};
+
+// numbers 
+function numberClick(number) {
+    if (newCalculation) {
+        cleanInput();
+        newCalculation = false;
+    }
+    result.value += number;
+    currentInput += number;
+};
+
+//  Calculate the result of the input
+function calculateResult(input) {
+    const operatorsStack = [];
+    const numbersStack = [];
+    let currentNumber = '';
+
+    for (let i = 0; i < input.length; i++) {
+        const char = input[i];
+        
+        if (!isNaN(char) || char === '.') {
+            currentNumber += char;
+        } else if (operators.includes(char)) {
+            if (currentNumber !== '') {
+                numbersStack.push(parseFloat(currentNumber));
+                currentNumber = '';
+            }
+            while (operatorsStack.length > 0 && getOperatorPrecedence(operatorsStack[operatorsStack.length - 1]) >= getOperatorPrecedence(char)) {
+                const num1 = numbersStack.pop();
+                const num2 = numbersStack.pop();
+                const operator = operatorsStack.pop();
+                numbersStack.push(calculateTwoNumbers(num2, num1, operator));
+            }
+            operatorsStack.push(char);
+        }
     }
 
-    //   numbers = " ";
-    numbers = result.value
-    newCalculation = true;
-
+    if (currentNumber !== '') {
+        numbersStack.push(parseFloat(currentNumber));
     }
 
-     catch (e) {
-         result.value = "Error";
+    while (operatorsStack.length > 0) {
+        const num1 = numbersStack.pop();
+        const num2 = numbersStack.pop();
+        const operator = operatorsStack.pop();
+        numbersStack.push(calculateTwoNumbers(num2, num1, operator));
     }
 
+    return numbersStack.pop();
+};
+
+
+// calculate to numbers beased on operator
+function calculateTwoNumbers(num1, num2, operator) {
+    switch(operator) {
+        case("+"): return num1 + num2;
+         case("-"): return num1 - num2;
+         case("*"): return num1 * num2;
+         case("/"):return num2 === 0 ? "Error" : num1 / num2;
+         default: return 0;
+
     }
+};
 
-
-
-
-
-
-
-
-
-
-
-
-        // function equalInput() {
-
-        // try {
-        //     const finalResult = calculateResult(numbers);
-        //     //  numbers = eval(numbers);
-
-        // if(finalResult === "Error" || isNaN(finalResult)){
-        //     result.value = "Error";
-        // }
-        // else{result.value= finalResult;
-        // }
-
-        // //   numbers = " ";
-        // numbers = result.value
-        // newCalculation = true;
-
-        // }
-
-        //  catch (e) {
-        //      result.value = "Error";
-        // }
-
-        // }
-
-
-
-
-
-
-
+//  operator precedence 
+function arrangeOperators (operator) {
+    switch(operator) {
+        case "+":
+        case "-":
+            return 1;
+        case "*":
+        case "/":
+            return 2;
+        default:
+            return 0;
+        }
+};
 
 
 
